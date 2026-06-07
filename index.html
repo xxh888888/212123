@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>WeAreDevs Lua 混淆完整解码器</title>
+    <title>WeAreDevs Lua 混淆解码器 - 上传文件直接下载解码结果</title>
     <style>
         * {
             box-sizing: border-box;
@@ -11,63 +11,91 @@
             background: #1e1e1e;
             color: #d4d4d4;
             font-family: 'Segoe UI', 'Consolas', monospace;
-            padding: 20px;
+            padding: 30px 20px;
             margin: 0;
         }
         .container {
-            max-width: 1400px;
+            max-width: 900px;
             margin: 0 auto;
         }
         h1 {
-            font-size: 24px;
+            font-size: 28px;
             color: #4ec9b0;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
         .sub {
             color: #888;
-            margin-bottom: 20px;
-            font-size: 13px;
+            margin-bottom: 25px;
+            font-size: 14px;
         }
         .info {
             background: #2d2d2d;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 25px;
             border-left: 4px solid #4ec9b0;
+            line-height: 1.5;
         }
         .info code {
             background: #1e1e1e;
-            padding: 2px 5px;
-            border-radius: 3px;
+            padding: 2px 6px;
+            border-radius: 4px;
             color: #ce9178;
         }
-        textarea {
-            width: 100%;
-            height: 220px;
+        .upload-area {
+            background: #252526;
+            border: 2px dashed #3c3c3c;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 20px;
+        }
+        .upload-area:hover {
+            border-color: #4ec9b0;
+            background: #2a2a2a;
+        }
+        .upload-area.drag-over {
+            border-color: #4ec9b0;
+            background: #2a2a2a;
+        }
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .file-info {
             background: #2d2d2d;
-            color: #d4d4d4;
-            border: 1px solid #3c3c3c;
-            font-family: 'Consolas', monospace;
-            font-size: 11px;
-            padding: 10px;
-            resize: vertical;
-            border-radius: 6px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            display: none;
+        }
+        .file-info.show {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         button {
             background: #0e639c;
             color: white;
             border: none;
-            padding: 8px 20px;
-            margin: 12px 8px 12px 0;
+            padding: 10px 24px;
+            margin: 8px 8px 0 0;
             cursor: pointer;
             font-size: 14px;
             font-weight: bold;
-            border-radius: 4px;
+            border-radius: 6px;
             transition: 0.2s;
         }
         button:hover {
             background: #1177bb;
+        }
+        button:disabled {
+            background: #3a3a3a;
+            cursor: not-allowed;
         }
         .btn-clear {
             background: #3a3a3a;
@@ -75,108 +103,94 @@
         .btn-clear:hover {
             background: #4a4a4a;
         }
-        .btn-copy {
-            background: #2d5a2d;
-        }
-        .btn-copy:hover {
-            background: #3a6e3a;
-        }
-        .output-area {
-            background: #252526;
-            border: 1px solid #3c3c3c;
-            border-radius: 6px;
-            margin-top: 20px;
-        }
-        .output-header {
-            padding: 10px 15px;
-            background: #2d2d2d;
-            border-bottom: 1px solid #3c3c3c;
-            font-weight: bold;
-            color: #9cdcfe;
-            border-radius: 6px 6px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        #output {
-            padding: 15px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            font-family: 'Consolas', monospace;
-            font-size: 11px;
-            max-height: 500px;
-            overflow: auto;
-            line-height: 1.4;
-        }
         .status {
-            font-size: 12px;
+            font-size: 13px;
             color: #6a9955;
-            margin-top: 10px;
-            padding: 5px;
+            margin-top: 15px;
+            padding: 10px;
+            background: #252526;
+            border-radius: 6px;
+            display: none;
+        }
+        .status.show {
+            display: block;
+        }
+        .status.error {
+            color: #f48771;
         }
         .progress {
             display: none;
-            font-size: 12px;
+            font-size: 13px;
             color: #dcdcaa;
+            margin-top: 10px;
         }
         hr {
             border-color: #3c3c3c;
-            margin: 15px 0;
+            margin: 20px 0;
+        }
+        .footer {
+            font-size: 11px;
+            color: #555;
+            text-align: center;
+            margin-top: 30px;
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>🔓 WeAreDevs Lua 混淆完整解码器</h1>
-    <div class="sub">解码 \数字转义 + 递归 Base64（支持任意层数）| 变量名保持混淆，字符串和逻辑完全还原</div>
+    <h1>🔓 WeAreDevs Lua 混淆解码器</h1>
+    <div class="sub">上传混淆文件 → 自动解码 → 直接下载解码结果（无需后端）</div>
 
     <div class="info">
         💡 <strong>使用说明：</strong><br>
-        1. 将混淆代码完整粘贴到下方（以 <code>return(function(...)local t={...</code> 开头）。<br>
-        2. 点击 <strong>「开始解码」</strong>，程序会自动解码所有 <code>\数字</code> 转义和 Base64 层。<br>
-        3. 解码后变量名仍是混淆的（如 <code>_0x1234</code>），但所有字符串、函数调用、URL 都已还原。<br>
-        4. 点击 <strong>「下载解码文件」</strong> 保存为 <code>.lua</code> 文件。<br>
-        ⚠️ 大文件解码可能需几秒钟，请耐心等待。
+        1. 点击或拖拽上传混淆后的 <code>.lua</code> 文件（以 <code>return(function(...)local t={...</code> 开头）。<br>
+        2. 点击 <strong>「开始解码并下载」</strong>，程序会自动解码所有 <code>\数字</code> 转义和 Base64 层。<br>
+        3. 解码完成后<strong>自动下载</strong>解码后的文件（文件名：<code>原文件名_decoded.lua</code>）。<br>
+        4. 变量名保持混淆形式（如 <code>_0x1234</code>），但所有字符串、URL、函数逻辑完全还原。<br>
+        ⚠️ 大文件解码可能需要几秒到十几秒，请耐心等待。
     </div>
 
-    <textarea id="input" placeholder='粘贴混淆代码...&#10;例如：return(function(...)local t={"\105\073\071\097..."}...'></textarea>
+    <!-- 上传区域 -->
+    <div id="dropZone" class="upload-area" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">📁📂</div>
+        <div>点击或拖拽上传 .lua 文件</div>
+        <div style="font-size: 12px; color: #888; margin-top: 8px;">支持 .lua 或 .txt 格式</div>
+    </div>
+    <input type="file" id="fileInput" accept=".lua,.txt,.luau" style="display: none" onchange="handleFileSelect(event)">
+
+    <div id="fileInfo" class="file-info">
+        <span id="fileName">未选择文件</span>
+        <span id="fileSize"></span>
+    </div>
 
     <div>
-        <button onclick="startDecode()">🚀 开始解码</button>
-        <button class="btn-clear" onclick="clearAll()">🗑️ 清空</button>
-        <button class="btn-copy" onclick="copyOutput()">📋 复制结果</button>
-        <button class="btn-copy" onclick="downloadFile()">💾 下载解码文件</button>
+        <button id="decodeBtn" onclick="startDecode()" disabled>🚀 开始解码并下载</button>
+        <button class="btn-clear" onclick="clearFile()">🗑️ 清空</button>
     </div>
-    <div id="status" class="status"></div>
-    <div id="progress" class="progress">解码中，请稍候...</div>
 
-    <div class="output-area">
-        <div class="output-header">
-            <span>📄 解码结果</span>
-            <span style="font-size:11px; color:#888;">↓ 可滚动/复制/下载 ↓</span>
-        </div>
-        <div id="output">等待解码...</div>
+    <div id="status" class="status"></div>
+    <div id="progress" class="progress">⏳ 解码中，请稍候（大文件可能需要几秒）...</div>
+
+    <div class="footer">
+        纯前端解码 | 不上传任何数据到服务器 | 解码后自动下载
     </div>
 </div>
 
 <script>
+    let selectedFile = null;
+
     // ==================== Base64 解码（支持 UTF-8）====================
     function base64Decode(str) {
         try {
-            // 清理空白和换行
             let clean = str.replace(/\s/g, '');
-            // 补全 = 号
             while (clean.length % 4 !== 0) {
                 clean += '=';
             }
-            // atob 返回 ASCII 字符串，需要转成 UTF-8 处理中文
             let binaryStr = atob(clean);
-            // 将二进制字符串转成 Uint8Array
             let bytes = new Uint8Array(binaryStr.length);
             for (let i = 0; i < binaryStr.length; i++) {
                 bytes[i] = binaryStr.charCodeAt(i);
             }
-            // 用 TextDecoder 解码 UTF-8
             let decoder = new TextDecoder('utf-8');
             return decoder.decode(bytes);
         } catch(e) {
@@ -184,14 +198,11 @@
         }
     }
 
-    // 判断是否可能是 Base64（较宽松）
     function isLikelyBase64(str) {
         if (!str || str.length < 20) return false;
-        // 允许 A-Z a-z 0-9 + / = 以及常见换行
         return /^[A-Za-z0-9+\/\r\n\t =]+$/.test(str);
     }
 
-    // 解码 ASCII 转义 \数字
     function decodeAsciiEscapes(str) {
         return str.replace(/\\(\d+)/g, function(match, num) {
             let code = parseInt(num, 10);
@@ -206,7 +217,6 @@
         });
     }
 
-    // 递归解码所有 Base64 层（全自动，直到无法解码）
     function recursiveDecodeBase64(str, maxDepth = 30) {
         let current = str;
         let changed = true;
@@ -216,7 +226,6 @@
             changed = false;
             depth++;
             
-            // 方案1：整个字符串是纯 Base64
             if (isLikelyBase64(current) && current.length >= 20) {
                 let decoded = base64Decode(current);
                 if (decoded && decoded.length > 0 && decoded !== current) {
@@ -226,24 +235,21 @@
                 }
             }
             
-            // 方案2：提取双引号或单引号内的 Base64 字符串
             let newResult = current;
             let replaced = false;
             
-            // 匹配 "xxxx" 或 'xxxx' 形式的长 Base64
+            // 匹配引号内的长 Base64
             newResult = newResult.replace(/["']([A-Za-z0-9+\/=]{20,})["']/g, function(match, b64str) {
                 let decoded = base64Decode(b64str);
                 if (decoded && decoded.length > 0 && decoded !== b64str) {
                     replaced = true;
-                    // 为了避免递归嵌套的引号问题，转义字符串内的引号
                     return decoded.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
                 }
                 return match;
             });
             
-            // 匹配不带引号的大段 Base64（常见于数组中的单独字符串）
+            // 匹配无引号的大段 Base64
             newResult = newResult.replace(/([A-Za-z0-9+\/=]{40,})/g, function(match, b64str) {
-                // 避免替换已经解码过的普通文本
                 if (b64str.length > 40 && isLikelyBase64(b64str)) {
                     let decoded = base64Decode(b64str);
                     if (decoded && decoded.length > 0 && decoded.length < b64str.length * 1.2) {
@@ -262,94 +268,144 @@
         return current;
     }
 
-    // 完整解码流程
     function fullDecode(input) {
         if (!input || input.trim() === '') {
-            return '【错误】请输入混淆代码';
+            throw new Error('文件内容为空');
         }
-        
         let step1 = decodeAsciiEscapes(input);
         let step2 = recursiveDecodeBase64(step1);
-        // 再解一次 ASCII（有时 Base64 解码后又有新的 \数字）
         let step3 = decodeAsciiEscapes(step2);
-        // 最后一轮 Base64（保险）
         let step4 = recursiveDecodeBase64(step3);
-        
         return step4;
     }
 
     // ==================== UI 交互 ====================
-    function startDecode() {
-        let inputEl = document.getElementById('input');
-        let outputEl = document.getElementById('output');
-        let statusEl = document.getElementById('status');
-        let progressEl = document.getElementById('progress');
-        
-        let rawCode = inputEl.value;
-        if (!rawCode.trim()) {
-            outputEl.innerText = '【提示】请在上方粘贴混淆代码';
-            statusEl.innerText = '❌ 未检测到输入';
-            return;
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (file) {
+            selectedFile = file;
+            updateFileInfo(file);
+            document.getElementById('decodeBtn').disabled = false;
         }
-        
-        statusEl.innerText = '⏳ 解码中，请稍候（大文件可能需要几秒）...';
-        progressEl.style.display = 'inline';
-        outputEl.innerText = '解码中...';
-        
-        // 使用 setTimeout 避免卡死 UI
-        setTimeout(() => {
-            try {
-                let result = fullDecode(rawCode);
-                outputEl.innerText = result;
-                statusEl.innerHTML = '✅ 解码完成！变量名仍为混淆形式，但所有字符串和逻辑已还原。';
-                progressEl.style.display = 'none';
-            } catch(e) {
-                outputEl.innerText = '解码出错：' + e.message + '\n\n请检查代码是否完整粘贴';
-                statusEl.innerText = '❌ 解码失败：' + e.message;
-                progressEl.style.display = 'none';
-            }
-        }, 50);
     }
-    
-    function clearAll() {
-        document.getElementById('input').value = '';
-        document.getElementById('output').innerText = '等待解码...';
-        document.getElementById('status').innerText = '';
+
+    // 拖拽上传
+    const dropZone = document.getElementById('dropZone');
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('drag-over');
+    });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file && (file.name.endsWith('.lua') || file.name.endsWith('.txt') || file.name.endsWith('.luau'))) {
+            selectedFile = file;
+            updateFileInfo(file);
+            document.getElementById('decodeBtn').disabled = false;
+            // 同步 file input
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            document.getElementById('fileInput').files = dataTransfer.files;
+        } else {
+            showStatus('请上传 .lua 或 .txt 文件', 'error');
+        }
+    });
+
+    function updateFileInfo(file) {
+        document.getElementById('fileName').textContent = `📄 ${file.name}`;
+        document.getElementById('fileSize').textContent = `${(file.size / 1024).toFixed(2)} KB`;
+        document.getElementById('fileInfo').classList.add('show');
+    }
+
+    function showStatus(msg, type = 'info') {
+        const statusEl = document.getElementById('status');
+        statusEl.textContent = msg;
+        statusEl.className = 'status show';
+        if (type === 'error') {
+            statusEl.classList.add('error');
+        } else {
+            statusEl.classList.remove('error');
+        }
+        setTimeout(() => {
+            if (statusEl.textContent === msg) {
+                statusEl.classList.remove('show');
+            }
+        }, 5000);
+    }
+
+    function clearFile() {
+        selectedFile = null;
+        document.getElementById('fileInput').value = '';
+        document.getElementById('fileInfo').classList.remove('show');
+        document.getElementById('decodeBtn').disabled = true;
+        document.getElementById('status').classList.remove('show');
         document.getElementById('progress').style.display = 'none';
     }
-    
-    function copyOutput() {
-        let output = document.getElementById('output').innerText;
-        if (!output || output === '等待解码...' || output === '解码中...') {
-            alert('没有可复制的内容，请先解码');
+
+    function startDecode() {
+        if (!selectedFile) {
+            showStatus('请先选择文件', 'error');
             return;
         }
-        navigator.clipboard.writeText(output).then(() => {
-            alert('已复制到剪贴板');
-        }).catch(() => {
-            alert('复制失败，可手动选择复制');
-        });
+        
+        const decodeBtn = document.getElementById('decodeBtn');
+        const progressEl = document.getElementById('progress');
+        
+        decodeBtn.disabled = true;
+        progressEl.style.display = 'block';
+        showStatus('正在读取文件...');
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                showStatus('正在解码（可能需要几秒到十几秒）...');
+                setTimeout(() => {
+                    try {
+                        const originalContent = e.target.result;
+                        const decoded = fullDecode(originalContent);
+                        
+                        // 生成下载文件名
+                        let originalName = selectedFile.name;
+                        let baseName = originalName.replace(/\.(lua|txt|luau)$/i, '');
+                        let downloadName = baseName + '_decoded.lua';
+                        
+                        // 自动下载
+                        const blob = new Blob([decoded], {type: 'text/plain'});
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = downloadName;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        
+                        showStatus(`✅ 解码完成！已自动下载: ${downloadName}`);
+                        progressEl.style.display = 'none';
+                        decodeBtn.disabled = false;
+                    } catch(err) {
+                        showStatus(`解码失败: ${err.message}`, 'error');
+                        progressEl.style.display = 'none';
+                        decodeBtn.disabled = false;
+                    }
+                }, 50);
+            } catch(err) {
+                showStatus(`读取文件失败: ${err.message}`, 'error');
+                progressEl.style.display = 'none';
+                decodeBtn.disabled = false;
+            }
+        };
+        reader.onerror = function() {
+            showStatus('读取文件失败', 'error');
+            progressEl.style.display = 'none';
+            decodeBtn.disabled = false;
+        };
+        reader.readAsText(selectedFile, 'UTF-8');
     }
-    
-    function downloadFile() {
-        let output = document.getElementById('output').innerText;
-        if (!output || output === '等待解码...' || output === '解码中...') {
-            alert('没有可下载的内容，请先解码');
-            return;
-        }
-        let blob = new Blob([output], {type: 'text/plain'});
-        let url = URL.createObjectURL(blob);
-        let a = document.createElement('a');
-        a.href = url;
-        a.download = 'homelander_decoded.lua';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        alert('下载完成！文件名为 homelander_decoded.lua');
-    }
-    
-    // 可选：自动检测粘贴并解码（不自动执行，避免大文件卡死）
 </script>
 </body>
 </html>
